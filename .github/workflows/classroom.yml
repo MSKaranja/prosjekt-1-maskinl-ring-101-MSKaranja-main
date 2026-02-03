@@ -1,0 +1,62 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Oppgave 1
+      id: oppgave-1
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Oppgave 1
+        setup-command: curl -s "https://bjornoka.folk.ntnu.no/kira-gh-classroom/validate-p1.zip"
+          --output validate.zip && unzip -P "${{ secrets.PROSJEKT_PASSORD }}" validate.zip
+          && bash setup.sh
+        command: bash validate-task-1.sh
+        timeout: 10
+        max-score: 10
+    - name: Oppgave 2
+      id: oppgave-2
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Oppgave 2
+        setup-command: ''
+        command: bash validate-task-2.sh
+        timeout: 10
+        max-score: 10
+    - name: Bonusoppgave 1
+      id: bonusoppgave-1
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Bonusoppgave 1
+        setup-command: ''
+        command: bash validate-bonus-1.sh
+        timeout: 10
+        max-score: 5
+    - name: Bonusoppgave 2
+      id: bonusoppgave-2
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Bonusoppgave 2
+        setup-command: ''
+        command: bash validate-bonus-2.sh
+        timeout: 10
+        max-score: 5
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        OPPGAVE-1_RESULTS: "${{steps.oppgave-1.outputs.result}}"
+        OPPGAVE-2_RESULTS: "${{steps.oppgave-2.outputs.result}}"
+        BONUSOPPGAVE-1_RESULTS: "${{steps.bonusoppgave-1.outputs.result}}"
+        BONUSOPPGAVE-2_RESULTS: "${{steps.bonusoppgave-2.outputs.result}}"
+      with:
+        runners: oppgave-1,oppgave-2,bonusoppgave-1,bonusoppgave-2
